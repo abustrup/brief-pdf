@@ -1,0 +1,8 @@
+work/
+*.orig
+.DS_Store
+# Sample PDFs from days that carry publisher photographs: the pipeline embeds
+# images rather than hotlinking them, so committing those would rehost someone
+# else's pictures. Generate them locally instead.
+samples/*2026-08-17*
+samples/*2026-08-06*

@@ -1,0 +1,81 @@
+/* ============================================================
+   Print stylesheet for the archival PDF edition.
+   Screen machinery removed; editorial composition preserved.
+   ============================================================ */
+@page { size: A4; margin: 11mm 10mm 13mm; }
+
+@media print {
+  html {
+    /* A4 is 794 CSS px wide; the composition needs ~930px to keep its two
+       columns and the signals rail, so zoom out and scale the type back up. */
+    zoom: 0.745;
+    font-size: 20px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body { background: var(--bg); }
+  :root { --container: 960px; }
+
+  /* --- interactive / screen-only machinery --- */
+  .skip-link,
+  .top-bar,
+  #edition-nav,
+  #layout-nav,
+  #audio-controls,
+  .audio-controls,
+  .feedback-panel,
+  #read-later,
+  .read-later,
+  #feedback-status,
+  .save-later-button { display: none !important; }
+
+
+  /* --- fragmentation: CSS grid rows leave whole blank pages when the row is
+     taller than the remaining space. Multicol fragments and refills instead. --- */
+  .story-grid,
+  .recommendation-grid {
+    display: block !important;
+    column-count: 2;
+    column-gap: 34px;
+    column-fill: auto;
+  }
+  /* The shortlist is short: balance it so the last page never shows one full
+     column beside an empty one. */
+  .short-news {
+    display: block !important;
+    column-count: 2;
+    column-gap: 26px;
+    column-fill: balance;
+  }
+  .story-card,
+  .short-news .signal-item,
+  .recommendation-card { display: block !important; }
+
+  /* --- break discipline --- */
+  .signal-item,
+  .recommendation-short,
+  .counterpoint-box,
+  .klumme-uncertainty,
+  .story-media,
+  .recommendation-media,
+  figure { break-inside: avoid; }
+
+  .section-heading,
+  .signals-title,
+  .klumme-kicker,
+  .klumme-title,
+  .recommendations-header,
+  h1, h2, h3 { break-after: avoid; }
+
+  .story-headline,
+  .story-subheadline { break-after: avoid; }
+
+  p { orphans: 2; widows: 2; }
+
+  .expanded-news,
+  .short-news-section,
+  .klumme-slot,
+  .recommendations-section { break-before: auto; }
+
+  .page-footer { break-before: avoid; }
+}

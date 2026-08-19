@@ -1,0 +1,476 @@
+/* ==========================================================================
+   d4-opslag — front page for the archival PDF: a magazine opening spread
+   compressed onto one A4 sheet.
+
+   Geometry note. The body pages are printed with `html { zoom: .745 }` (see
+   print.css) so the site composition keeps its columns on A4. That zoom would
+   silently shrink every length written here, so the front page multiplies it
+   back out: inside .fp, 1mm is one real millimetre on paper again.
+
+   Fit note. Every type size is `calc(Npt * var(--s))`. A script measures the
+   composed page once and solves for --s, so 4 stories fill the sheet and 9
+   stories still fit it. Nothing is truncated to make room.
+   ==========================================================================
+
+   These rules are deliberately NOT inside @media print. The fit solver has to
+   measure the composed page in the live DOM before Chrome prints it, and rules
+   hidden behind @media print do not apply then -- the first build measured an
+   unconstrained box, solved for the largest scale it was offered, and clipped
+   a third of the page. Uniform `zoom` keeps screen and paper proportional, so
+   measuring on screen is exact. */
+
+
+
+/* The body pages sit inside print.css's @page margin, which Chrome leaves
+   unpainted -- so the cream stopped 10mm short of the trim and the sheet had a
+   white border. The front page is the first page and nothing else, so it can
+   take the whole sheet and carry its own padding. */
+@page :first { margin: 0; }
+
+.fp {
+  /* undo print.css's html zoom: .745 -> back to 1:1 with the paper */
+  zoom: 1.34228;
+  --s: 1;
+  /* Labels, masthead and footer are furniture, not voice: they stop growing
+     where the headlines keep going, otherwise a four-story day turns the
+     wordmark into two lines and the date into three. */
+  --sc: min(var(--s), 1.12);
+  --pw: 210mm;          /* full A4 width: the sheet bleeds to the trim */
+  --ph: 297mm;          /* full A4 height */
+  --hair: #c9bba4;
+  --hair-soft: #ddd1bc;
+
+  box-sizing: border-box;
+  width: var(--pw);
+  height: var(--ph);
+  padding: 11mm 10mm 9mm;   /* the margin the @page rule used to supply */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  break-after: page;
+  page-break-after: always;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+  text-rendering: geometricPrecision;
+}
+
+.fp * { box-sizing: border-box; }
+.fp a { text-decoration: none; color: inherit; }
+.fp img { display: block; }
+
+/* Order matters: `.fp > *` and `.fp-spacer` have equal specificity, so the
+   blanket rule has to come first or it cancels the spacers' flex-grow and the
+   slack on a light day pools at the foot of the sheet instead of opening the
+   composition. That is exactly what happened to 2026-06-23. */
+.fp > * { flex: 0 0 auto; }
+.fp > .fp-spacer { flex: 1 1 auto; min-height: 0; }
+.fp.measuring .fp-spacer { display: none; }
+/* Slack goes mostly to the picture: on a light day the hero grows rather than
+   the gaps between bands. */
+.fp > .fp-hero { flex: 4 1 auto; }
+
+/* ---------------------------------------------------------- masthead --- */
+.fp-rule-top {
+  height: calc(1.6mm * var(--s));
+  background: var(--accent);
+  margin-bottom: calc(3.4mm * var(--s));
+}
+
+.fp-mast {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8mm;
+  padding-bottom: calc(2.6mm * var(--s));
+  border-bottom: 0.5pt solid var(--hair);
+}
+
+.fp-wordmark {
+  white-space: nowrap;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-weight: 400;
+  font-size: calc(30pt * var(--sc));
+  line-height: 0.9;
+  letter-spacing: -0.012em;
+  margin: 0;
+}
+.fp-wordmark em { font-style: italic; }
+
+.fp-mast-right {
+  text-align: right;
+  font-family: "Archivo", sans-serif;
+}
+.fp-date {
+  white-space: nowrap;
+  margin: 0;
+  font-weight: 700;
+  font-size: calc(7.6pt * var(--sc));
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.fp-legend {
+  margin: calc(1.4mm * var(--s)) 0 0;
+  font-weight: 600;
+  font-size: calc(6.1pt * var(--s));
+  letter-spacing: 0.055em;
+  color: var(--muted);
+}
+.fp-legend b { color: var(--accent); font-weight: 700; }
+
+/* ------------------------------------------------------------- hero ---- */
+.fp-hero {
+  display: grid;
+  grid-template-columns: 57fr 43fr;
+  gap: calc(7mm * var(--s));
+  padding-top: calc(5mm * var(--s));
+}
+
+.fp-hero-media {
+  position: relative;
+  /* stretched to the text column, so the photo's foot and the source tags sit
+     on the same line -- the alignment is the whole point of the spread */
+  align-self: stretch;
+  min-height: calc(88mm * var(--s));
+  overflow: hidden;
+  background: var(--surface);
+}
+.fp-hero-media img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: saturate(0.94) contrast(1.02);
+}
+.fp-credit {
+  position: absolute;
+  left: 0; bottom: 0;
+  padding: calc(1.1mm * var(--s)) calc(2mm * var(--s));
+  background: rgba(27, 23, 20, 0.62);
+  color: #f6efe4;
+  font-family: "Archivo", sans-serif;
+  font-weight: 600;
+  font-size: calc(5.2pt * var(--sc));
+  letter-spacing: 0.05em;
+  max-width: 92%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fp-hero-text { display: flex; flex-direction: column; }
+
+.fp-flag {
+  font-family: "Archivo", sans-serif;
+  font-weight: 800;
+  font-size: calc(6.4pt * var(--sc));
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 calc(2.2mm * var(--s));
+}
+
+.fp-kicker {
+  font-family: "Archivo", sans-serif;
+  font-weight: 700;
+  font-size: calc(6.6pt * var(--sc));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 calc(1.8mm * var(--s));
+}
+
+.fp-hero-hl {
+  font-family: "Newsreader", Georgia, serif;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.016em;
+  margin: 0;
+  hyphens: none;
+}
+
+.fp-stand {
+  font-family: "Spectral", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: calc(11.4pt * var(--s));
+  line-height: 1.32;
+  color: var(--body-soft);
+  /* pinned to the foot of the column: the air then falls between headline and
+     standfirst, where it reads as composition, instead of pooling above the
+     tags, where it reads as a gap nobody filled */
+  margin: calc(4mm * var(--s)) 0 0;
+  margin-top: auto;
+  padding-left: calc(3.4mm * var(--s));
+  border-left: 1.6pt solid var(--accent);
+  hyphens: none;
+}
+
+.fp-hero-text .fp-tags { padding-top: calc(4.4mm * var(--s)); }
+
+/* ------------------------------------------------------------- tags ---- */
+.fp-tags {
+  font-family: "Archivo", sans-serif;
+}
+.fp-tagline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(2.2mm * var(--s));
+}
+.fp-tags-stack .fp-tagline + .fp-tagline { margin-top: calc(1.9mm * var(--s)); }
+.fp-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(1.2mm * var(--s));
+  font-weight: 700;
+  font-size: calc(5.9pt * var(--sc));
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.fp-tag-sec { color: var(--ink); }
+.fp-tag-sec::before {
+  content: "";
+  width: calc(1.5mm * var(--s));
+  height: calc(1.5mm * var(--s));
+  background: var(--accent);
+  display: inline-block;
+}
+/* This is a button, and it has to look like one at a glance: a filled, ruled
+   pill with the publisher's own mark and an explicit outward arrow. The old
+   hairline-on-cream chip read as a caption, not as something you press. */
+.fp-tag-pub {
+  border: 0.9pt solid var(--ink);
+  border-radius: 999px;
+  padding: calc(1.05mm * var(--s)) calc(2.4mm * var(--s));
+  color: var(--ink);
+  background: #fff;
+  box-shadow: 0 0.5pt 0 rgba(27, 23, 20, 0.28);
+  gap: calc(1.3mm * var(--s));
+}
+/* the arrow is an svg now; see fp.js arrow() */
+
+/* The headline jump gets its own affordance, so the two clicks are visibly
+   different things: a filled accent pill saying which page it lands on. */
+.fp-arrow {
+  width: 1.32em;
+  height: 1.32em;
+  flex: 0 0 auto;
+  display: inline-block;
+  vertical-align: -0.28em;
+}
+.fp-tag-pub .fp-arrow { color: var(--accent); margin-left: calc(0.3mm * var(--s)); }
+.fp-jump .fp-arrow { color: #fff; }
+
+.fp-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(0.9mm * var(--s));
+  border-radius: 999px;
+  padding: calc(0.85mm * var(--s)) calc(2.1mm * var(--s));
+  /* Deliberately not the accent red: red is the brief's emphasis colour and a
+     filled red pill read as an alert rather than a control. Ink-filled reads as
+     a button, sits quieter, and still separates cleanly from the white
+     outbound button beside it. */
+  background: var(--ink);
+  /* `.fp a { color: inherit }` above is (0,1,1) and outranks a bare `.fp-jump`
+     (0,1,0), so the label inherited dark ink and printed black-on-black inside
+     the pill while the svg arrow -- selected by two classes -- stayed white.
+     Qualifying with the element restores the intended colour. */
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.fp a.fp-jump, .fp a.fp-jump span { color: #fff; }
+.fp a.fp-tag-pub, .fp a.fp-tag-pub span { color: var(--ink); }
+
+.fp-tag-pub img {
+  width: calc(3.1mm * var(--s));
+  height: calc(3.1mm * var(--s));
+  object-fit: contain;
+}
+.fp-tag-out { color: var(--accent); font-weight: 800; }
+.fp-tag-out::before {
+  content: "";
+  width: calc(1.2mm * var(--s));
+  height: calc(1.2mm * var(--s));
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+}
+.fp-imp {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(1.3mm * var(--s));
+  font-weight: 700;
+  font-size: calc(5.6pt * var(--sc));
+  letter-spacing: 0.09em;
+  color: var(--muted);
+}
+.fp-imp .track {
+  display: inline-block;
+  position: relative;
+  width: calc(11mm * var(--s));
+  height: calc(0.9mm * var(--s));
+  background: var(--hair-soft);
+}
+.fp-imp .track i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--muted);
+}
+.fp-imp.hot .track i { background: var(--accent); }
+.fp-imp.hot { color: var(--accent); }
+
+/* -------------------------------------------------------- second tier -- */
+.fp-band {
+  display: grid;
+  gap: calc(6mm * var(--s));
+  border-top: 0.5pt solid var(--hair);
+  padding-top: calc(4.2mm * var(--s));
+}
+.fp-band-3 { grid-template-columns: repeat(3, 1fr); }
+.fp-band-2 { grid-template-columns: repeat(2, 1fr); }
+.fp-band-1 { grid-template-columns: 1fr; }
+
+.fp-sec { display: flex; flex-direction: column; position: relative; }
+.fp-sec + .fp-sec::before {
+  content: "";
+  position: absolute;
+  left: calc(-3mm * var(--s));
+  top: 0; bottom: 0;
+  border-left: 0.5pt solid var(--hair-soft);
+}
+.fp-sec-media {
+  height: calc(29mm * var(--s));
+  overflow: hidden;
+  background: var(--surface);
+  margin-bottom: calc(2.8mm * var(--s));
+}
+.fp-sec-media img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.94); }
+.fp-sec-hl {
+  font-family: "Newsreader", Georgia, serif;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.008em;
+  margin: 0 0 calc(2.2mm * var(--s));
+  hyphens: none;
+}
+.fp-sec .fp-tags { margin-top: auto; }
+
+/* --------------------------------------------------------- tail list --- */
+.fp-tail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: calc(7mm * var(--s));
+  row-gap: calc(3.2mm * var(--s));
+  border-top: 0.5pt solid var(--hair);
+  padding-top: calc(3.6mm * var(--s));
+}
+.fp-tail-1 { grid-template-columns: 1fr; }
+.fp-brief-label {
+  grid-column: 1 / -1;
+  font-family: "Archivo", sans-serif;
+  font-weight: 800;
+  font-size: calc(6.2pt * var(--sc));
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 calc(0.6mm * var(--s));
+}
+.fp-item {
+  border-top: 0.5pt solid var(--hair-soft);
+  padding-top: calc(2.4mm * var(--s));
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: calc(2.8mm * var(--s));
+  align-items: start;
+}
+.fp-item-media {
+  width: calc(15mm * var(--s));
+  height: calc(15mm * var(--s));
+  overflow: hidden;
+  background: var(--surface);
+}
+.fp-item-media img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.92); }
+.fp-item-hl {
+  font-family: "Newsreader", Georgia, serif;
+  font-weight: 700;
+  line-height: 1.12;
+  margin: calc(0.6mm * var(--s)) 0 calc(1.6mm * var(--s));
+  hyphens: none;
+}
+.fp-item .fp-tag { font-size: calc(5.4pt * var(--sc)); }
+.fp-item .fp-imp { font-size: calc(5.2pt * var(--sc)); }
+.fp-item .fp-imp .track { width: calc(7mm * var(--s)); }
+.fp-item .fp-tag-pub { padding: calc(0.6mm * var(--s)) calc(1.3mm * var(--s)); }
+.fp-item .fp-tag-pub img { width: calc(2.7mm * var(--s)); height: calc(2.7mm * var(--s)); }
+
+/* ------------------------------------------------------------ footer --- */
+.fp-foot {
+  white-space: nowrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-top: 0.5pt solid var(--hair);
+  padding-top: calc(2.2mm * var(--s));
+  font-family: "Archivo", sans-serif;
+  font-weight: 600;
+  font-size: calc(5.8pt * var(--sc));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fp-foot-mark { letter-spacing: 0.24em; color: var(--ink); }
+
+/* ------------------------------------------- days without any imagery --- */
+.fp.noimg .fp-hero { grid-template-columns: 1fr; }
+.fp.noimg .fp-hero-media { display: none; }
+.fp.noimg .fp-hero-hl { max-width: 92%; }
+.fp.noimg .fp-stand {
+  margin-top: calc(6mm * var(--s));
+  max-width: 74%;
+  font-size: calc(14pt * var(--s));
+}
+.fp.noimg .fp-hero-text .fp-tags { padding-top: calc(5mm * var(--s)); }
+.fp.noimg .fp-band { border-top: 0; padding-top: 0; }
+.fp.noimg .fp-sec-media,
+.fp.noimg .fp-item-media { display: none; }
+.fp.noimg .fp-sec { border-top: 1.2pt solid var(--ink); padding-top: calc(2.6mm * var(--s)); }
+.fp.noimg .fp-item { grid-template-columns: 1fr; }
+
+
+/* A story whose picture has rotted keeps its place in the band; the space its
+   photo would have taken is left open and ruled, rather than filled with a grey
+   box that reads as a broken image. */
+.fp-sec-nophoto { border-top: 1.4pt solid var(--ink); padding-top: calc(3mm * var(--s)); }
+
+
+/* --- one-pager mode: the rest of the edition, when there is no rest -------- */
+.fp-solo { border-top: 1.4pt solid var(--ink); padding-top: calc(2.2mm * var(--s)); }
+.fp-solo-h {
+  margin: 0 0 calc(1.6mm * var(--s));
+  font-family: var(--sans, "Archivo", sans-serif);
+  font-size: calc(6.2pt * var(--sc));
+  font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent);
+}
+.fp-solo-list { columns: 2; column-gap: calc(7mm * var(--s)); }
+.fp-solo-item {
+  display: block; break-inside: avoid;
+  font-size: calc(7.6pt * var(--s)); line-height: 1.28;
+  padding: calc(0.9mm * var(--s)) 0;
+  border-bottom: 0.4pt solid var(--hair-soft);
+}
+.fp-solo-pub {
+  font-family: var(--sans, "Archivo", sans-serif);
+  font-size: calc(5.2pt * var(--sc)); font-weight: 800;
+  letter-spacing: .1em; color: var(--muted); margin-right: calc(1.4mm * var(--s));
+}
+.fp-solo-kl {
+  display: flex; align-items: baseline; gap: calc(2mm * var(--s));
+  margin-top: calc(2mm * var(--s)); padding-top: calc(1.6mm * var(--s));
+  border-top: 0.4pt solid var(--hair);
+}
+.fp-solo-kl-t { font-size: calc(8.4pt * var(--s)); font-weight: 600; font-style: italic; }
